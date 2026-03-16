@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>会員カード作成</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 24px;
+    }
+    .wrap {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #475569;
+      background: #0b1220;
+      color: #fff;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: 0;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Apple Walletに追加</h1>
+      <p>氏名・会員番号・所属を入力して、会員カードを作成します。</p>
+
+      <label for="name">氏名</label>
+      <input id="name" type="text" placeholder="例: 山田　太郎" />
+
+      <label for="memberNumber">会員番号</label>
+      <input id="memberNumber" type="text" inputmode="numeric" placeholder="例: 0012345" />
+
+      <label for="affiliation">所属</label>
+      <input id="affiliation" type="text" placeholder="例: 〇〇県アーチェリー協会" />
+
+      <button id="addBtn" type="button">Apple Walletに追加</button>
+
+      <p>
+        本カードは個人利用向けの会員カードです。正式な会員確認は主催者運用に従ってください。
+      </p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("addBtn").addEventListener("click", () => {
+      const name = document.getElementById("name").value.trim();
+      const memberNumber = document.getElementById("memberNumber").value.trim();
+      const affiliation = document.getElementById("affiliation").value.trim();
+
+      if (!name || !memberNumber || !affiliation) {
+        alert("氏名・会員番号・所属を入力してください。");
+        return;
+      }
+
+      const url =
+        `/pass?name=${encodeURIComponent(name)}` +
+        `&memberNumber=${encodeURIComponent(memberNumber)}` +
+        `&affiliation=${encodeURIComponent(affiliation)}`;
+
+      window.location.href = url;
+    });
+  </script>
+</body>
+</html>
