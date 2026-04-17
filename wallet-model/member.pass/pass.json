@@ -3,14 +3,15 @@
   "passTypeIdentifier": "pass.archery.member.yoshida",
   "teamIdentifier": "6G3QR5QURU",
   "organizationName": "Archery Wallet",
-  "description": "Archery Member Display Card",
-  "serialNumber": "TEMPLATE-SERIAL",
-  "foregroundColor": "rgb(255,255,255)",
-  "backgroundColor": "rgb(15,23,42)",
-  "labelColor": "rgb(148,163,184)",
-  "generic": {
+  "description": "Archery JPN",
+  "backgroundColor": "rgb(253,254,85)",
+  "foregroundColor": "rgb(28,28,30)",
+  "labelColor": "rgb(103,84,42)",
+  "storeCard": {
+    "headerFields": [],
     "primaryFields": [],
     "secondaryFields": [],
+    "auxiliaryFields": [],
     "backFields": []
   }
 }

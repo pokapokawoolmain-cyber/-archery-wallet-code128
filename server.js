@@ -16,11 +16,9 @@ const port = Number(process.env.PORT || 3000);
 
 const MODEL_PATH = path.join(__dirname, "wallet-model", "member.pass");
 const CERTS_PATH = path.join(__dirname, "certs");
-const MEMBER_NUMBER_REGEX = /^00\d{5}$/;
-const BARCODE_PREFIX = "A010100";
-const BARCODE_SUFFIX = "A";
-const NOTICE_TEXT =
-  "本カードは個人利用向けの表示用カードです。正式な会員確認は主催者運用に従ってください。";
+const MEMBER_NUMBER_REGEX = /^0\d{6}$/;
+const BARCODE_PREFIX = "";
+const BARCODE_SUFFIX = "";
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -30,8 +28,8 @@ app.get("/health", (_req, res) => {
     ok: true,
     service: "archery-wallet-starter",
     barcodeFormat: "PKBarcodeFormatCode128",
-    memberNumberRule: "00 + 5桁数字",
-    barcodeRule: "A010100{memberNumber}A",
+    memberNumberRule: "7桁の数字（例: 0012345）",
+    barcodeRule: "先頭に0を1つ追加した8桁",
   });
 });
 
@@ -39,6 +37,7 @@ app.get("/pass", async (req, res) => {
   try {
     const name = sanitize(req.query.name, 40);
     const memberNumber = sanitizeMemberNumber(req.query.memberNumber);
+    const barcodeNumber = toBarcodeNumber(memberNumber);
     const affiliation = sanitize(req.query.affiliation, 60);
 
     if (!name || !memberNumber || !affiliation) {
@@ -68,16 +67,26 @@ app.get("/pass", async (req, res) => {
       }
     );
 
+    pass.headerFields.splice(
+      0,
+      pass.headerFields.length
+    );
+
     pass.primaryFields.splice(
       0,
       pass.primaryFields.length,
-      { key: "name", label: "氏名", value: name }
+      { key: "memberNumber", label: "会員番号", value: memberNumber }
     );
 
     pass.secondaryFields.splice(
       0,
       pass.secondaryFields.length,
-      { key: "memberNumber", label: "会員番号", value: memberNumber },
+      { key: "name", label: "氏名", value: name }
+    );
+
+    pass.auxiliaryFields.splice(
+      0,
+      pass.auxiliaryFields.length,
       { key: "affiliation", label: "所属", value: affiliation }
     );
 
@@ -87,7 +96,7 @@ app.get("/pass", async (req, res) => {
       {
         key: "barcodeRule",
         label: "バーコード文字列",
-        value: `${BARCODE_PREFIX}${memberNumber}${BARCODE_SUFFIX}`,
+        value: barcodeNumber,
       },
       {
         key: "barcodeType",
@@ -97,12 +106,13 @@ app.get("/pass", async (req, res) => {
       {
         key: "notice",
         label: "注意",
-        value: NOTICE_TEXT,
+        value:
+          "本カードは連盟非公認オンライン会員カードです。正式な会員確認は主催者運用に従ってください。",
       }
     );
 
     const barcode = {
-      message: buildBarcodeMessage(memberNumber),
+      message: barcodeNumber,
       format: "PKBarcodeFormatCode128",
       messageEncoding: "iso-8859-1",
     };
@@ -114,7 +124,7 @@ app.get("/pass", async (req, res) => {
 
     res.set({
       "Content-Type": "application/vnd.apple.pkpass",
-      "Content-Disposition": `inline; filename="archery-member-${memberNumber}.pkpass"`,
+      "Content-Disposition": `attachment; filename="archery-member-${memberNumber}.pkpass"`,
       "Cache-Control": "no-store, no-cache, must-revalidate",
       Pragma: "no-cache",
       Expires: "0",
@@ -181,8 +191,8 @@ function sanitizeMemberNumber(value) {
   return digits;
 }
 
-function buildBarcodeMessage(memberNumber) {
-  return `${BARCODE_PREFIX}${memberNumber}${BARCODE_SUFFIX}`;
+function toBarcodeNumber(memberNumber) {
+  return memberNumber.padStart(8, "0");
 }
 
 function renderValidationError() {
@@ -190,8 +200,8 @@ function renderValidationError() {
     <html lang="ja">
       <body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:24px;background:#0f172a;color:#e5e7eb;">
         <h1>入力内容を確認してください</h1>
-        <p>会員番号は <strong>00 + 5桁数字</strong> の 7 桁で入力してください。</p>
-        <p>例: <code>0011464</code></p>
+        <p>会員番号は <strong>7桁の数字</strong> で入力してください。</p>
+        <p>例: <code>0012345</code></p>
       </body>
     </html>
   `;
