@@ -19,6 +19,7 @@ const CERTS_PATH = path.join(__dirname, "certs");
 const MEMBER_NUMBER_REGEX = /^0\d{6}$/;
 const BARCODE_PREFIX = "";
 const BARCODE_SUFFIX = "";
+const LOG_ENDPOINT = "https://script.google.com/macros/s/AKfycbxGwQtZs_IcFwr95nmgbyYiTQ1Sen5qrbESzOZr6xEYfhlQK7YT85WV3W4lzBmkQ0g-/exec";
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -39,7 +40,7 @@ app.get("/pass", async (req, res) => {
     const memberNumber = sanitizeMemberNumber(req.query.memberNumber);
     const barcodeNumber = toBarcodeNumber(memberNumber);
     const affiliation = sanitize(req.query.affiliation, 60);
-
+    console.log("PASS HIT", { name, memberNumber, barcodeNumber, affiliation });
     if (!name || !memberNumber || !affiliation) {
       return res.status(400).send(renderValidationError());
     }
@@ -119,6 +120,31 @@ app.get("/pass", async (req, res) => {
 
     pass.setBarcodes(barcode);
     pass.barcode = barcode;
+
+    try {
+  const resLog = await fetch(LOG_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      name,
+      memberNumber,
+      affiliation,
+      ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress || "",
+      userAgent: req.headers["user-agent"] || "",
+      isReissue: false
+    }),
+    redirect: "follow"
+  });
+
+  const text = await resLog.text();
+  console.log("LOG STATUS:", resLog.status);
+  console.log("LOG RESULT:", text);
+
+} catch (logError) {
+  console.error("LOG ERROR:", logError);
+}
 
     const buffer = await pass.getAsBuffer();
 
