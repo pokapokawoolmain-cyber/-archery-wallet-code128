@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+wallet-check/
+*.pkpass
+certs/backup/
+certs/pass.csr
+certs/*.cer
