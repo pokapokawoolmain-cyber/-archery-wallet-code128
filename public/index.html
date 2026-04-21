@@ -6,117 +6,175 @@
 <title>会員証をWalletに追加</title>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: white;
   margin: 0;
-  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(59,130,246,0.12), transparent 35%),
+    linear-gradient(180deg, #081226 0%, #0f172a 100%);
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+.wrapper {
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 48px 18px 40px;
 }
 
 .container {
-  max-width: 420px;
-  margin: 60px auto;
-  padding: 30px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 24px;
+  padding: 34px 22px 26px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.28);
 }
 
 h1 {
+  margin: 0 0 26px;
   text-align: center;
-  margin-bottom: 25px;
-  font-size: 22px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.form-group {
+  margin-bottom: 18px;
 }
 
 label {
   display: block;
-  margin-top: 15px;
+  margin-bottom: 8px;
   font-size: 14px;
-  opacity: 0.8;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
 }
 
 input {
   width: 100%;
-  padding: 14px;
-  margin-top: 6px;
-  border-radius: 10px;
+  height: 54px;
   border: none;
-  outline: none;
+  border-radius: 14px;
+  padding: 0 16px;
   font-size: 16px;
+  outline: none;
+  background: rgba(255,255,255,0.96);
+  color: #0f172a;
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,0.06);
+}
+
+input::placeholder {
+  color: #94a3b8;
 }
 
 button {
   width: 100%;
-  margin-top: 25px;
-  padding: 15px;
+  height: 56px;
+  margin-top: 6px;
   border: none;
-  border-radius: 12px;
-  background: #3b82f6;
-  color: white;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #4f8df7 0%, #3b82f6 100%);
+  color: #ffffff;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.2s;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 10px 24px rgba(59,130,246,0.28);
 }
 
-button:hover {
-  background: #2563eb;
+button:active {
+  transform: scale(0.99);
 }
 
 button:disabled {
-  background: #64748b;
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 #loading {
   text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
-  opacity: 0.7;
+  margin-top: 14px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.72);
 }
 
-/* 下部注意 */
 .footer-note {
   margin-top: 20px;
   font-size: 12px;
-  opacity: 0.6;
+  line-height: 1.6;
   text-align: center;
-  line-height: 1.5;
+  color: rgba(255,255,255,0.58);
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 34px 14px 28px;
+  }
+
+  .container {
+    padding: 28px 18px 22px;
+    border-radius: 20px;
+  }
+
+  h1 {
+    font-size: 18px;
+    margin-bottom: 22px;
+  }
+
+  input {
+    height: 52px;
+    font-size: 16px;
+  }
+
+  button {
+    height: 54px;
+  }
 }
 </style>
 </head>
 
 <body>
+  <div class="wrapper">
+    <div class="container">
+      <h1>会員証をWalletに追加</h1>
 
-<div class="container">
-  <h1>会員証をWalletに追加</h1>
+      <form id="issueForm" action="/generate" method="GET">
+        <div class="form-group">
+          <label for="name">名前</label>
+          <input id="name" type="text" name="name" required>
+        </div>
 
-  <form id="issueForm" action="/generate" method="GET">
-    <label>名前</label>
-    <input type="text" name="name" required>
+        <div class="form-group">
+          <label for="memberNumber">会員番号（7桁）</label>
+          <input id="memberNumber" type="text" name="memberNumber" inputmode="numeric" required>
+        </div>
 
-    <label>会員番号（7桁）</label>
-    <input type="text" name="memberNumber" required>
+        <div class="form-group">
+          <label for="affiliation">所属</label>
+          <input id="affiliation" type="text" name="affiliation" required>
+        </div>
 
-    <label>所属</label>
-    <input type="text" name="affiliation" required>
+        <input type="hidden" id="requestId" name="requestId">
 
-    <input type="hidden" id="requestId" name="requestId">
+        <button id="submitBtn" type="submit">Walletに追加する</button>
+      </form>
 
-    <button id="submitBtn" type="submit">
-      Walletに追加する
-    </button>
-  </form>
+      <div id="loading" style="display:none;">
+        発行中です…
+      </div>
 
-  <div id="loading" style="display:none;">
-    発行中です…
+      <div class="footer-note">
+        ※本サービスは非公式です。使用可否については各運営の指示に従ってください。
+      </div>
+    </div>
   </div>
-
-  <div class="footer-note">
-    ※本サービスは非公式です。使用可否については各運営の指示に従ってください。
-  </div>
-</div>
 
 <script>
 const form = document.getElementById("issueForm");
@@ -141,6 +199,5 @@ form.addEventListener("submit", (e) => {
   submitBtn.textContent = "発行中...";
 });
 </script>
-
 </body>
 </html>
