@@ -32,10 +32,19 @@
     const submitBtn = document.getElementById("submitBtn");
     const requestIdInput = document.getElementById("requestId");
 
-    form.addEventListener("submit", () => {
-      requestIdInput.value =
-        Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+    // ページ表示時に1回だけ requestId を生成
+    requestIdInput.value =
+      Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
 
+    let isSubmitting = false;
+
+    form.addEventListener("submit", (event) => {
+      if (isSubmitting) {
+        event.preventDefault();
+        return;
+      }
+
+      isSubmitting = true;
       loading.style.display = "block";
       submitBtn.disabled = true;
       submitBtn.textContent = "発行中...";
