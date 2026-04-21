@@ -154,30 +154,30 @@ app.get("/generate", async (req, res) => {
       return res.status(400).send(renderValidationError());
     }
 
-    fetch(LOG_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name,
-        memberNumber,
-        affiliation,
-        requestId,
-        ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress || "",
-        userAgent: req.headers["user-agent"] || "",
-        isReissue: false
-      }),
-      redirect: "follow"
-    })
-      .then(async (resLog) => {
-        const text = await resLog.text();
-        console.log("LOG STATUS:", resLog.status);
-        console.log("LOG RESULT:", text);
-      })
-      .catch((logError) => {
-        console.error("LOG ERROR:", logError);
+    try {
+      const resLog = await fetch(LOG_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name,
+          memberNumber,
+          affiliation,
+          requestId,
+          ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress || "",
+          userAgent: req.headers["user-agent"] || "",
+          isReissue: false
+        }),
+        redirect: "follow"
       });
+
+      const text = await resLog.text();
+      console.log("LOG STATUS:", resLog.status);
+      console.log("LOG RESULT:", text);
+    } catch (logError) {
+      console.error("LOG ERROR:", logError);
+    }
 
     const query = new URLSearchParams({
       name,
