@@ -1,53 +1,170 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>会員登録</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会員証をWalletに追加</title>
+
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 30px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 22px;
+}
+
+/* 注意ボックス */
+.notice {
+  background: rgba(255, 180, 0, 0.15);
+  border: 1px solid rgba(255, 180, 0, 0.5);
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.notice strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #2563eb;
+}
+
+button:disabled {
+  background: #64748b;
+}
+
+#loading {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* 下部注意 */
+.footer-note {
+  margin-top: 20px;
+  font-size: 12px;
+  opacity: 0.6;
+  text-align: center;
+  line-height: 1.5;
+}
+</style>
 </head>
+
 <body>
-  <h2>会員登録フォーム</h2>
+
+<div class="container">
+  <h1>会員証をWalletに追加</h1>
+
+  <div class="notice">
+    <strong>⚠ 非公認の為</strong>
+    この会員証は非公認のものであり、公式の資格や権利を証明するものではありません。<br>
+    利用は自己責任でお願いいたします。
+  </div>
 
   <form id="issueForm" action="/generate" method="GET">
-    <label>名前</label><br>
-    <input type="text" name="name" required><br><br>
+    <label>名前</label>
+    <input type="text" name="name" required>
 
-    <label>会員番号</label><br>
-    <input type="text" name="memberNumber" required><br><br>
+    <label>会員番号（7桁）</label>
+    <input type="text" name="memberNumber" required>
 
-    <label>所属</label><br>
-    <input type="text" name="affiliation" required><br><br>
+    <label>所属</label>
+    <input type="text" name="affiliation" required>
 
     <input type="hidden" id="requestId" name="requestId">
 
-    <button id="submitBtn" type="submit">発行する</button>
+    <button id="submitBtn" type="submit">
+      Walletに追加する
+    </button>
   </form>
 
-  <p id="loading" style="display:none; margin-top:16px;">
-    発行中です。しばらくお待ちください...
-  </p>
+  <div id="loading" style="display:none;">
+    発行中です…
+  </div>
 
-  <script>
-    const form = document.getElementById("issueForm");
-    const loading = document.getElementById("loading");
-    const submitBtn = document.getElementById("submitBtn");
-    const requestIdInput = document.getElementById("requestId");
+  <div class="footer-note">
+    ※ 本サービスは非公式です
+  </div>
+</div>
 
-    requestIdInput.value =
-      Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+<script>
+const form = document.getElementById("issueForm");
+const loading = document.getElementById("loading");
+const submitBtn = document.getElementById("submitBtn");
+const requestIdInput = document.getElementById("requestId");
 
-    let isSubmitting = false;
+// ページ表示時に1回だけ生成
+requestIdInput.value =
+  Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
 
-    form.addEventListener("submit", (event) => {
-      if (isSubmitting) {
-        event.preventDefault();
-        return;
-      }
+let isSubmitting = false;
 
-      isSubmitting = true;
-      loading.style.display = "block";
-      submitBtn.disabled = true;
-      submitBtn.textContent = "発行中...";
-    });
-  </script>
+form.addEventListener("submit", (e) => {
+  if (isSubmitting) {
+    e.preventDefault();
+    return;
+  }
+
+  isSubmitting = true;
+  loading.style.display = "block";
+  submitBtn.disabled = true;
+  submitBtn.textContent = "発行中...";
+});
+</script>
+
 </body>
 </html>
