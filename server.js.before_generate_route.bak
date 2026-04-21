@@ -122,37 +122,7 @@ app.get("/pass", async (req, res) => {
     pass.setBarcodes(barcode);
     pass.barcode = barcode;
 
-       
-    const buffer = await pass.getAsBuffer();
-
-    res.set({
-      "Content-Type": "application/vnd.apple.pkpass",
-      "Content-Disposition": `attachment; filename="archery-member-${memberNumber}.pkpass"`,
-      "Cache-Control": "no-store, no-cache, must-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
-    });
-
-    return res.send(buffer);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send(renderError(error));
-  }
-});
-
-
-app.get("/generate", async (req, res) => {
-  try {
-    const name = sanitize(req.query.name, 40);
-    const memberNumber = sanitizeMemberNumber(req.query.memberNumber);
-    const affiliation = sanitize(req.query.affiliation, 60);
-    const requestId = sanitize(req.query.requestId, 80);
-
-    if (!name || !memberNumber || !affiliation || !requestId) {
-      return res.status(400).send(renderValidationError());
-    }
-
-    fetch(LOG_ENDPOINT, {
+       fetch(LOG_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -177,14 +147,17 @@ app.get("/generate", async (req, res) => {
         console.error("LOG ERROR:", logError);
       });
 
-    const query = new URLSearchParams({
-      name,
-      memberNumber,
-      affiliation,
-      requestId
-    }).toString();
+    const buffer = await pass.getAsBuffer();
 
-    return res.redirect(`/pass?${query}`);
+    res.set({
+      "Content-Type": "application/vnd.apple.pkpass",
+      "Content-Disposition": `attachment; filename="archery-member-${memberNumber}.pkpass"`,
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
+
+    return res.send(buffer);
   } catch (error) {
     console.error(error);
     return res.status(500).send(renderError(error));
