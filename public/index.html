@@ -30,23 +30,6 @@ h1 {
   font-size: 22px;
 }
 
-/* 注意ボックス */
-.notice {
-  background: rgba(255, 180, 0, 0.15);
-  border: 1px solid rgba(255, 180, 0, 0.5);
-  padding: 15px;
-  border-radius: 12px;
-  font-size: 13px;
-  margin-bottom: 20px;
-  line-height: 1.6;
-}
-
-.notice strong {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-}
-
 label {
   display: block;
   margin-top: 15px;
@@ -109,12 +92,6 @@ button:disabled {
 <div class="container">
   <h1>会員証をWalletに追加</h1>
 
-  <div class="notice">
-    <strong>⚠ 非公認の為</strong>
-    この会員証は非公認のものであり、公式の資格や権利を証明するものではありません。<br>
-    利用は自己責任でお願いいたします。
-  </div>
-
   <form id="issueForm" action="/generate" method="GET">
     <label>名前</label>
     <input type="text" name="name" required>
@@ -137,7 +114,7 @@ button:disabled {
   </div>
 
   <div class="footer-note">
-    ※ 本サービスは非公式です
+    ※本サービスは非公式です。使用可否については各運営の指示に従ってください。
   </div>
 </div>
 
@@ -147,7 +124,6 @@ const loading = document.getElementById("loading");
 const submitBtn = document.getElementById("submitBtn");
 const requestIdInput = document.getElementById("requestId");
 
-// ページ表示時に1回だけ生成
 requestIdInput.value =
   Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
 
