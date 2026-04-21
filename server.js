@@ -148,6 +148,8 @@ app.get("/generate", async (req, res) => {
     const affiliation = sanitize(req.query.affiliation, 60);
     const requestId = sanitize(req.query.requestId, 80);
 
+    console.log("GENERATE HIT", { name, memberNumber, affiliation, requestId });
+
     if (!name || !memberNumber || !affiliation || !requestId) {
       return res.status(400).send(renderValidationError());
     }
