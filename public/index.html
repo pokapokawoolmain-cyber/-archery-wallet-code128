@@ -98,22 +98,6 @@ button:disabled {
   box-shadow: none;
 }
 
-.secondary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 52px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.1);
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
 #loading {
   text-align: center;
   margin-top: 14px;
@@ -127,21 +111,6 @@ button:disabled {
   line-height: 1.6;
   text-align: center;
   color: rgba(255,255,255,0.58);
-}
-
-.thank-you {
-  text-align: center;
-  padding: 18px 6px 8px;
-}
-
-.thank-you h1 {
-  margin-bottom: 14px;
-}
-
-.thank-you p {
-  margin: 0 0 16px;
-  color: rgba(255,255,255,0.82);
-  line-height: 1.6;
 }
 
 @media (max-width: 480px) {
@@ -173,7 +142,7 @@ button:disabled {
 
 <body>
   <div class="wrapper">
-    <div class="container" id="mainContainer">
+    <div class="container">
       <h1>会員証をWalletに追加</h1>
 
       <form id="issueForm" action="/generate" method="GET">
@@ -212,7 +181,6 @@ const form = document.getElementById("issueForm");
 const loading = document.getElementById("loading");
 const submitBtn = document.getElementById("submitBtn");
 const requestIdInput = document.getElementById("requestId");
-const container = document.getElementById("mainContainer");
 
 requestIdInput.value =
   Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
@@ -220,9 +188,8 @@ requestIdInput.value =
 let isSubmitting = false;
 
 form.addEventListener("submit", (e) => {
-  e.preventDefault();
-
   if (isSubmitting) {
+    e.preventDefault();
     return;
   }
 
@@ -230,35 +197,7 @@ form.addEventListener("submit", (e) => {
   loading.style.display = "block";
   submitBtn.disabled = true;
   submitBtn.textContent = "発行中...";
-
-  const params = new URLSearchParams(new FormData(form)).toString();
-  const url = "/generate?" + params;
-
-  window.open(url, "_blank");
-
-  setTimeout(() => {
-    container.innerHTML = `
-      <div class="thank-you">
-        <h1>Thank you for using it！</h1>
-        <p>会員証の発行が完了しました。</p>
-        <p>URLを共有して友達におすすめしよう</p>
-        <button class="secondary-button" onclick="copyShareUrl()">URLをコピー</button>
-        <div class="footer-note" style="margin-top:18px;">
-          ※本サービスは非公式です。使用可否については各運営の指示に従ってください。
-        </div>
-      </div>
-    `;
-  }, 500);
 });
-
-function copyShareUrl() {
-  const shareUrl = window.location.origin;
-  navigator.clipboard.writeText(shareUrl).then(() => {
-    alert("URLをコピーしました！");
-  }).catch(() => {
-    alert("URLのコピーに失敗しました。");
-  });
-}
 </script>
 </body>
 </html>
