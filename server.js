@@ -356,7 +356,7 @@ function buildGoogleWalletObject({
       contentDescription: {
         defaultValue: {
           language: "en-US",
-          value: "ARCHERY MEMBERSHIP CARD logo",
+          value: "logo",
         },
       },
     },
@@ -395,51 +395,6 @@ function buildGoogleWalletObject({
     },
 
     hexBackgroundColor: "#F1F248",
-  };
-}) {
-  const barcodeNumber = toBarcodeNumber(memberNumber);
-  const objectSuffix = crypto
-    .createHash("sha256")
-    .update(`${name}:${memberNumber}:${affiliation}`)
-    .digest("hex")
-    .slice(0, 24);
-
-  return {
-    id: `${issuerId}.${objectSuffix}`,
-    classId: `${issuerId}.${classSuffix}`,
-    state: "ACTIVE",
-
-    cardTitle: {
-      defaultValue: {
-        language: "en-US",
-        value: "ARCHERY MEMBERSHIP CARD",
-      },
-    },
-	  
-	 logo: {
-  sourceUri: {
-    uri: GOOGLE_WALLET_LOGO_URL,
-  },
-  contentDescription: {
-    defaultValue: {
-      language: "en-US",
-      value: "logo",
-    },
-  },
-},
-
-    header: {
-  defaultValue: {
-    language: "ja-JP",
-    value: "会員証",
-  },
-},
-	  
-    barcode: {
-      type: "CODE_128",
-      value: barcodeNumber,
-      alternateText: memberNumber,
-    },
   };
 }
 
