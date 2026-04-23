@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import jwt from "jsonwebtoken";
 import { fileURLToPath } from "node:url";
 import { PKPass } from "passkit-generator";
 
@@ -21,6 +22,23 @@ const BARCODE_PREFIX = "";
 const BARCODE_SUFFIX = "";
 const LOG_ENDPOINT = "https://script.google.com/macros/s/AKfycbxGwQtZs_IcFwr95nmgbyYiTQ1Sen5qrbESzOZr6xEYfhlQK7YT85WV3W4lzBmkQ0g-/exec";
 
+/* =========================
+   Google Wallet 用 追加設定
+   ========================= */
+const PUBLIC_BASE_URL =
+  process.env.PUBLIC_BASE_URL || "https://archery-wallet-code128.onrender.com";
+
+const GOOGLE_WALLET_ISSUER_ID = process.env.GOOGLE_WALLET_ISSUER_ID || "";
+const GOOGLE_WALLET_CLASS_SUFFIX =
+  process.env.GOOGLE_WALLET_CLASS_SUFFIX || "archery_membership_card_class_v1";
+const GOOGLE_SERVICE_ACCOUNT_EMAIL =
+  process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || "";
+const GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY =
+  (process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+
+const GOOGLE_WALLET_LOGO_URL = `${PUBLIC_BASE_URL}/google-wallet-logo.png`;
+const GOOGLE_WALLET_CARD_TITLE = "ARCHERY MEMBERSHIP CARD";
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -34,6 +52,9 @@ app.get("/health", (_req, res) => {
   });
 });
 
+/* =========================
+   Apple Wallet（既存・変更なし）
+   ========================= */
 app.get("/pass", async (req, res) => {
   try {
     const name = sanitize(req.query.name, 40);
@@ -65,14 +86,11 @@ app.get("/pass", async (req, res) => {
         teamIdentifier: process.env.TEAM_IDENTIFIER,
         organizationName: process.env.ORGANIZATION_NAME,
         description:
-          process.env.PASS_DESCRIPTION || "Archery Member Display Card",
+          process.env.PASS_DESCRIPTION || "Archery Membership Card",
       }
     );
 
-    pass.headerFields.splice(
-      0,
-      pass.headerFields.length
-    );
+    pass.headerFields.splice(0, pass.headerFields.length);
 
     pass.primaryFields.splice(
       0,
@@ -109,7 +127,7 @@ app.get("/pass", async (req, res) => {
         key: "notice",
         label: "注意",
         value:
-          "本カードは連盟非公認オンライン会員カードです。正式な会員確認は主催者運用に従ってください。",
+          "※本カードは連盟非公認オンライン会員カードです。正式な会員確認は主催者運用に従ってください。",
       }
     );
 
@@ -122,7 +140,6 @@ app.get("/pass", async (req, res) => {
     pass.setBarcodes(barcode);
     pass.barcode = barcode;
 
-       
     const buffer = await pass.getAsBuffer();
 
     res.set({
@@ -139,7 +156,6 @@ app.get("/pass", async (req, res) => {
     return res.status(500).send(renderError(error));
   }
 });
-
 
 app.get("/generate", async (req, res) => {
   try {
@@ -216,6 +232,59 @@ app.post("/generate", async (req, res) => {
   }
 });
 
+/* =========================
+   Google Wallet 用 追加ルート
+   ========================= */
+app.get("/google-pass", async (req, res) => {
+  try {
+    const name = sanitize(req.query.name, 40);
+    const memberNumber = sanitizeMemberNumber(req.query.memberNumber);
+    const affiliation = sanitize(req.query.affiliation, 60);
+
+    if (!name || !memberNumber || !affiliation) {
+      return res.status(400).send(renderValidationError());
+    }
+
+    if (
+      !GOOGLE_WALLET_ISSUER_ID ||
+      !GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+      !GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
+    ) {
+      return res.status(500).send(`
+        <html lang="ja">
+          <body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:24px;background:#0f172a;color:#e5e7eb;">
+            <h1>Google Wallet 設定が不足しています</h1>
+            <p><code>GOOGLE_WALLET_ISSUER_ID</code> / <code>GOOGLE_SERVICE_ACCOUNT_EMAIL</code> / <code>GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY</code> を設定してください。</p>
+          </body>
+        </html>
+      `);
+    }
+
+    const walletObject = buildGoogleWalletObject({
+      issuerId: GOOGLE_WALLET_ISSUER_ID,
+      classSuffix: GOOGLE_WALLET_CLASS_SUFFIX,
+      name,
+      memberNumber,
+      affiliation,
+    });
+
+    const saveUrl = createGoogleWalletSaveUrl({
+      issuerEmail: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      privateKey: GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
+      object: walletObject,
+    });
+
+    return res.redirect(saveUrl);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send(renderError(error));
+  }
+});
+
+
+
+
+
 app.listen(port, () => {
   console.log(`archery-wallet-starter listening on http://localhost:${port}`);
 });
@@ -251,6 +320,71 @@ function toBarcodeNumber(memberNumber) {
   return memberNumber.padStart(8, "0");
 }
 
+/* =========================
+   Google Wallet 用関数
+   ========================= */
+function buildGoogleWalletObject({
+  issuerId,
+  classSuffix,
+  name,
+  memberNumber,
+  affiliation,
+}) {
+  const barcodeNumber = toBarcodeNumber(memberNumber);
+  const objectSuffix = crypto
+    .createHash("sha256")
+    .update(`${name}:${memberNumber}:${affiliation}`)
+    .digest("hex")
+    .slice(0, 24);
+
+  return {
+    id: `${issuerId}.${objectSuffix}`,
+    classId: `${issuerId}.${classSuffix}`,
+    state: "ACTIVE",
+
+    cardTitle: {
+      defaultValue: {
+        language: "en-US",
+        value: "ARCHERY MEMBERSHIP CARD",
+      },
+    },
+
+    header: {
+  defaultValue: {
+    language: "ja-JP",
+    value: "会員証",
+  },
+},
+	  
+    barcode: {
+      type: "CODE_128",
+      value: barcodeNumber,
+      alternateText: memberNumber,
+    },
+  };
+}
+
+function createGoogleWalletSaveUrl({
+  issuerEmail,
+  privateKey,
+  object,
+}) {
+  const claims = {
+    iss: issuerEmail,
+    aud: "google",
+    typ: "savetowallet",
+    origins: [],
+    payload: {
+      genericObjects: [object],
+    },
+  };
+
+  const token = jwt.sign(claims, privateKey, {
+    algorithm: "RS256",
+  });
+
+  return `https://pay.google.com/gp/v/save/${token}`;
+}
 function renderValidationError() {
   return `
     <html lang="ja">
