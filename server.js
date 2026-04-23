@@ -348,6 +348,18 @@ function buildGoogleWalletObject({
         value: "ARCHERY MEMBERSHIP CARD",
       },
     },
+	  
+	 logo: {
+  sourceUri: {
+    uri: GOOGLE_WALLET_LOGO_URL,
+  },
+  contentDescription: {
+    defaultValue: {
+      language: "en-US",
+      value: "logo",
+    },
+  },
+},
 
     header: {
   defaultValue: {
