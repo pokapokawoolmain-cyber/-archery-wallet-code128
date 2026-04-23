@@ -162,11 +162,11 @@ app.get("/generate", async (req, res) => {
     const name = sanitize(req.query.name, 40);
     const memberNumber = sanitizeMemberNumber(req.query.memberNumber);
     const affiliation = sanitize(req.query.affiliation, 60);
-    const requestId = sanitize(req.query.requestId, 80);
+    const requestId = sanitize(req.query.requestId, 80) || crypto.randomUUID();
 
     console.log("GENERATE HIT", { name, memberNumber, affiliation, requestId });
 
-    if (!name || !memberNumber || !affiliation || !requestId) {
+    if (!name || !memberNumber || !affiliation) {
       return res.status(400).send(renderValidationError());
     }
 
@@ -202,7 +202,19 @@ app.get("/generate", async (req, res) => {
       requestId
     }).toString();
 
-    return res.redirect(`/pass?${query}`);
+    const ua = String(req.headers["user-agent"] || "").toLowerCase();
+    const isAndroid = ua.includes("android");
+    const isApple = ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod");
+
+    if (isAndroid) {
+      return res.redirect(`/google-pass?${query}`);
+    }
+
+    if (isApple) {
+      return res.redirect(`/pass?${query}`);
+    }
+
+    return res.send(renderDeviceChoicePage(query));
   } catch (error) {
     console.error(error);
     return res.status(500).send(renderError(error));
@@ -419,6 +431,22 @@ function createGoogleWalletSaveUrl({
 
   return `https://pay.google.com/gp/v/save/${token}`;
 }
+
+function renderDeviceChoicePage(query) {
+  return `
+    <html lang="ja">
+      <body style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;padding:24px;background:#0f172a;color:#e5e7eb;">
+        <h1>端末を選択してください</h1>
+        <p>自動判定できなかったため、保存先を選んでください。</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
+          <a href="/pass?${query}" style="padding:12px 18px;border-radius:12px;background:#2563eb;color:white;text-decoration:none;">Apple Wallet</a>
+          <a href="/google-pass?${query}" style="padding:12px 18px;border-radius:12px;background:#16a34a;color:white;text-decoration:none;">Google Wallet</a>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
 function renderValidationError() {
   return `
     <html lang="ja">
